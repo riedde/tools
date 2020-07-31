@@ -50,7 +50,7 @@ for $row at $pos in $rows
     let $meter := if ($MeterSym = '')
         		  then (<meter count="{$MeterCount}" unit="{$MeterUnit}"/>)
         		  else (<meter count="{$MeterCount}" unit="{$MeterUnit}" sym="{$MeterSym}"/>)
-    let $key := <key pname="{functx:substring-before-if-contains($row/cell[10]/string(),'-')}"
+    let $auth := <auth pname="{functx:substring-before-if-contains($row/cell[10]/string(),'-')}"
                      accid="{if(contains($row/cell[10]/string(),'-'))
                              then('f')
                              else()}"
@@ -121,7 +121,7 @@ for $row at $pos in $rows
                                         <lyricist xml:id="baudi-02-{$IdPartString}-lyricist">
                                            {$lyricist}
                                         </lyricist>
-                                        {$key}
+                                        {$auth}
                                         {$meter}
                                         <tempo>{$tempo}</tempo>
                                         <incip/>
@@ -167,8 +167,8 @@ for $row at $pos in $rows
                             				   <title>{$titleMain}</title>
                             				   <bibl>
                             				      <identifier>{$plateNum/text()}</identifier>
-                            				      <publisher><corpName key="baudi-05-b8018784">{$publisher}</corpName></publisher>
-                            				      <pubPlace><settlement key="baudi-06-a1ca746a">{$pubPlace}</settlement></pubPlace>
+                            				      <publisher><corpName auth="baudi-05-b8018784">{$publisher}</corpName></publisher>
+                            				      <pubPlace><settlement auth="baudi-06-a1ca746a">{$pubPlace}</settlement></pubPlace>
                             				      <date>{$pubDate}</date>
                    				              <dedicatee>{$dedication}</dedicatee>
                             				   </bibl>

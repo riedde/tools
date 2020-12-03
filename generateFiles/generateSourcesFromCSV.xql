@@ -6,9 +6,9 @@ declare default element namespace "http://www.music-encoding.org/ns/mei";
 declare namespace uuid = "java:java.util.UUID";
 declare namespace mei = "http://www.music-encoding.org/ns/mei";
 
-import module namespace functx = "http://www.functx.com" at "../../BauDi/baudiResources/data/libraries/functx.xqm";
+import module namespace functx = "http://www.functx.com" at "../../../BauDi/baudiResources/data/libraries/functx.xqm";
 
-let $csvInput := unparsed-text('../../BauDi/baudiSources/data/music/HugoKuntz.csv')
+let $csvInput := unparsed-text('../../../BauDi/baudiWorks/data/BLB-new.csv')
 let $lines := functx:lines($csvInput)
 
 let $xml-output :=  <table>
@@ -50,7 +50,7 @@ for $row at $pos in $rows
     let $meter := if ($MeterSym = '')
         		  then (<meter count="{$MeterCount}" unit="{$MeterUnit}"/>)
         		  else (<meter count="{$MeterCount}" unit="{$MeterUnit}" sym="{$MeterSym}"/>)
-    let $auth := <auth pname="{functx:substring-before-if-contains($row/cell[10]/string(),'-')}"
+    let $key := <key pname="{functx:substring-before-if-contains($row/cell[10]/string(),'-')}"
                      accid="{if(contains($row/cell[10]/string(),'-'))
                              then('f')
                              else()}"
@@ -81,6 +81,8 @@ for $row at $pos in $rows
     let $dedication := $row/cell[20]/string()
     let $annotPerf := <annot type="performance">{$row/cell[23]/string()}</annot>
     
+    let $shelfmark := $row/cell[33]/string()
+    let $perfMedium := $row/cell[29]/string()
     let $source := <mei xmlns="http://www.music-encoding.org/ns/mei"
                         xmlns:xlink="http://www.w3.org/1999/xlink"
                         meiversion="4.0.0"
@@ -121,18 +123,29 @@ for $row at $pos in $rows
                                         <lyricist xml:id="baudi-02-{$IdPartString}-lyricist">
                                            {$lyricist}
                                         </lyricist>
-                                        {$auth}
+                                        {$key}
                                         {$meter}
                                         <tempo>{$tempo}</tempo>
                                         <incip/>
                    				        <perfMedium>
-                   					          <perfResList auth="{if($row/cell[29]/string()='S,A,T,B')
-                                                               then('choirMixed')
-                                                               else if($row/cell[29]/string()='T,T,B,B')
-                                                               then('choirMen')
-                                                               else('choir')}">
-                                               {$perfRess}
-                                           </perfResList>
+                   					          <perfResList auth="{switch($perfMedium)
+                                                                   case 'S,A,T,B' return 'choirMixed'
+                                                                   case 'T,T,B,B' return 'choirMen'
+                                                                   default return $perfMedium
+                                                                  }">
+                                                  {for $perfMedium at $i in tokenize($row/cell[29],',')
+                                                     let $auth := switch($perfMedium)
+                                                                   case 'S' return 'soprano'
+                                                                   case 'A' return 'alto'
+                                                                   case 'T' return 'tenor'
+                                                                   case 'B' return 'bass'
+                                                                   case 'Org' return 'organ'
+                                                                   case 'Klav' return 'piano'
+                                                                   case 'Trp' return 'trumpet'
+                                                                   default return $perfMedium
+                                                     return
+                                                         <perfRes auth="{$auth}" xml:id="{concat('baudi-02-', $IdPartString,'-perfRes-',format-number($i, '0000'))}"/>}
+                                                 </perfResList>
                                            {$annotPerf}
                    				        </perfMedium>
                    				        <contents/>
@@ -142,6 +155,7 @@ for $row at $pos in $rows
                    			      <manifestation class="#pr">
                    				        <identifier type="rism"/>
                    				        <identifier type="baudi-copy">{$row/cell[21]/string()}</identifier>
+                   				        <identifier type="blb">{$shelfmark}</identifier>
                    				        <titleStmt>
                    					          <title>
                    					            <titlePart type="main" xml:id="baudi-01-{$IdPartString}-titleMain">{$titleMain}</titlePart>
@@ -199,8 +213,8 @@ for $row at $pos in $rows
                    				        </physDesc>
                    				        <physLoc>
                    					          <repository> 
-                                                    <corpName>Chormusikverlag Seebold, St. Augustin</corpName> 
-                                                 </repository>
+                                                    <corpName>Badische Landesbibliothek</corpName> 
+                                              </repository>
                    				        </physLoc>
                    				        <creation>{if($row/cell[19]/string() !='')then(concat('Erschienen ',$row/cell[19]/string()))else()}</creation>
                    				        <history></history>
@@ -260,4 +274,4 @@ for $row at $pos in $rows
         where $pos > 1 and $pos != count($rows)
         return
 (:            $source:)
-            put($source,concat('../../BauDi/baudiSources/data/music/kuntz/baudi-01-', $IdPartString, '.xml'))
+            put($source,concat('../../../BauDi/baudiSources/data/music/blb/baudi-01-', $IdPartString, '.xml'))

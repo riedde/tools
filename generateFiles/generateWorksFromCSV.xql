@@ -6,11 +6,11 @@ declare default element namespace "http://www.music-encoding.org/ns/mei";
 declare namespace uuid = "java:java.util.UUID";
 declare namespace mei = "http://www.music-encoding.org/ns/mei";
 
-import module namespace functx = "http://www.functx.com" at "../../BauDi/baudiResources/data/libraries/functx.xqm";
+import module namespace functx = "http://www.functx.com" at "../../../BauDi/baudiResources/data/libraries/functx.xqm";
 
 
 
-let $csvInput := unparsed-text('../../BauDi/baudiWorks/data/HochsteinSeebold.csv')
+let $csvInput := unparsed-text('../../../BauDi/baudiWorks/data/BLB-new.csv')
 let $lines := functx:lines($csvInput)
 
 let $xml-output :=  <table>
@@ -44,6 +44,8 @@ for $row in $xml-output//row
     let $MeterCount := $row/cell[12]/string()
     let $MeterUnit := $row/cell[13]/string()
     let $MeterSym := if($row/cell[14]/string() = 'true') then('common') else('')
+    
+    let $perfMedium := $row/cell[29]/string()
     
     let $work := <work xmlns="http://www.music-encoding.org/ns/mei" status="created" xml:id="baudi-02-{$IdPartString}">
                      <identifier type="baudi-copy">{$row/cell[21]/string()}</identifier>
@@ -84,21 +86,23 @@ for $row in $xml-output//row
                          <language auth="de"/>
                      </langUsage>
                      <perfMedium>
-                        <perfResList auth="{if($row/cell[29]/string()='S,A,T,B')
-                                            then('choirMixed')
-                                            else if($row/cell[29]/string()='T,T,B,B')
-                                            then('choirMen')
-                                            else('choir')}">
-                         {for $perfMedium in tokenize($row/cell[29],',')
+                        <perfResList auth="{switch($perfMedium)
+                                               case 'S,A,T,B' return 'choirMixed'
+                                               case 'T,T,B,B' return 'choirMen'
+                                               default return $perfMedium
+                                            }">
+                         {for $perfMedium at $i in tokenize($row/cell[29],',')
                             let $auth := switch($perfMedium)
                                           case 'S' return 'soprano'
                                           case 'A' return 'alto'
                                           case 'T' return 'tenor'
                                           case 'B' return 'bass'
                                           case 'Org' return 'organ'
+                                          case 'Klav' return 'piano'
+                                          case 'Trp' return 'trumpet'
                                           default return $perfMedium
                             return
-                                <perfRes auth="{$auth}"/>}
+                                <perfRes auth="{$auth}" xml:id="{concat('baudi-02-', $IdPartString,'-perfRes-',format-number($i, '0000'))}"/>}
                         </perfResList>
                      </perfMedium>
                      <audience/>
@@ -115,8 +119,8 @@ for $row in $xml-output//row
                      <classification>
                          <head/>
                          <termList>
-                             <term type="workGroup" subtype="vocal"/>
-                             <term type="genre" subtype="choir"/>
+                             <term type="workGroup">vocal</term>
+                             <term type="genre">choir</term>
                          </termList>
                      </classification>
                      <!--<relationList>
@@ -126,5 +130,5 @@ for $row in $xml-output//row
                  
     where $fassung = false()
         return
-            put($work,concat('../../BauDi/baudiWorks/data/hochstein/baudi-02-', $IdPartString, '.xml'))
+            put($work,concat('../../../BauDi/baudiWorks/data/blb/baudi-02-', $IdPartString, '.xml'))
 

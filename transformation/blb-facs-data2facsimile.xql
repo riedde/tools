@@ -69,7 +69,7 @@ declare function local:getFolia ($n) {
 
 let $collection := collection('../../../BauDi/baudiSources/data/music?select=*.xml;recurse=yes')
 
-let $docsToUpdate := $collection//mei:mei
+let $docsToUpdate := $collection//mei:mei (:[@xml:id='baudi-01-9e390f5d']:)
 
 for $docToUpdate in $docsToUpdate
     let $docUri := document-uri($docToUpdate/root())
